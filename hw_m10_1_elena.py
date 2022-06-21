@@ -1,22 +1,58 @@
 from collections import UserDict
 
 
-class AddressBook(UserDict):
-    def __init__(self, contacts) -> None:
-        self.contacts = contacts
+class Field:
+    def __init__(self, value) -> None:
+        self.value = value
+    
+    def __str__(self) -> str:
+        return self.value
+    
+    def __repr__(self) -> str:
+        return self.value
 
 
-ucontacts = AddressBook({})
+class Name(Field):
+    pass
 
 
-class Name:
-    def __init__(self, name: str) -> None:
+class Phone(Field):
+    pass
+
+
+class Record:
+    def __init__(self, name: Name, phone: Phone = None) -> None:
         self.name = name
+        self.phones = []
+        if phone:
+            self.add_phone(phone)
+
+    def add_phone(self, phone):
+        self.phones.append(phone)
+
+    def change_phone(self, phone, new_phone):
+        if self.del_phone(phone):
+            self.add_phone(new_phone)
+            return True
+        return False
+
+    def del_phone(self, phone):
+        for i, p in enumerate(self.phones):
+            if p.value == phone.value:
+                return self.phones.pop(i)
+
+    def __repr__(self) -> str:
+        return ','.join([p.value for p in self.phones])
 
 
-class Phone:
-    def __init__(self, phone: str) -> None:
-        self.phone = phone
+class AddressBook(UserDict):
+    # def __init__(self, contacts) -> None:
+    #     self.contacts = contacts
+    def add_record(self, rec: Record):
+        self.data[rec.name.value] = rec
+
+
+contacts = AddressBook()
 
 
 def input_error(func):
@@ -39,34 +75,43 @@ def exit(*args):
 
 @input_error
 def add(*args):
-    uname = Name(args[0])
-    uphone = Phone(args[1])
-    ucontacts.contacts[uname.name] = uphone.phone
+    name = Name(args[0])
+    phone = Phone(args[1])
+    rec = Record(name, phone)
+    contacts.add_record(rec)
     # print(ucontacts.contacts)
-    return f'contact {uname.name} added successfully'
+    return f'contact {name.value} added successfully'
 
 
 @input_error
 def change(*args):
-    uname = Name(args[0])
-    uphone_n = Phone(args[1])
-
-    for key in ucontacts.contacts.keys():
-        if uname.name == key:
-            ucontacts.contacts[uname.name] = uphone_n.phone
-            return f'Contact {uname.name} changed successfully'
+    name = Name(args[0])
+    phone = Phone(args[1])
+    new_phone = Phone(args[2])
+    # for key in ucontacts.contacts.keys():
+    #     if uname.name == key:
+    #         ucontacts.contacts[uname.name] = uphone_n.phone
+    #         return f'Contact {uname.name} changed successfully'
+    rec = contacts.get(name.value)
+    if rec:
+        result = rec.change_phone(phone, new_phone)
+        if result:
+            return f'Contact {name.value} changed successfully'
 
 
 def get_phone(*args):
-    uname = Name(args[0])
-    for key in ucontacts.contacts.keys():
-        if uname.name == key:
-            user_phone = ucontacts.contacts.get(key)
-    return user_phone
+    name = Name(args[0])
+    # for key in ucontacts.contacts.keys():
+    #     if uname.name == key:
+    #         user_phone = ucontacts.contacts.get(key)
+    rec = contacts.get(name.value)
+    if rec:
+        return rec.phones
+    return "....."
 
 
 def show_all(*args):
-    return '\n'.join([f'{k}:{v}' for k, v in ucontacts.contacts.items()])
+    return '\n'.join([f'{k}:{v}' for k, v in contacts.items()])
     # lst = ['{:<12}:{:>12}'.format(k, v) for k, v in contacts.items()]
     # return '\n'.join(lst)
 
